@@ -1,6 +1,5 @@
 import React from 'react'
 import { StyleSheet, View, TextInput, Button, FlatList, Text, ActivityIndicator} from 'react-native'
-import films from '../Helpers/filmsData'
 import FilmItem from './FilmItem'
 import { getFilmsFromApiWithSearchedText } from '../API/TMDBApi'
 
@@ -8,22 +7,26 @@ class Search extends React.Component {
 
     constructor(props) {
         super(props)
-        this.state = {
-        films: [],
-        isLoading: false
-        }
         this.searchedText = ""
+        this.page = 0
+        this.totalPages = 0
+        this.state = {
+            films: [],
+            isLoading: false
+        }
     }
 
     _loadFilms() {
         if (this.searchedText.length > 0) {
             this.setState({ isLoading: true })
-            getFilmsFromApiWithSearchedText(this.searchedText).then(data =>
+            getFilmsFromApiWithSearchedText(this.searchedText, this.page+1).then(data => {
+                this.page = data.page
+                this.totalPages = data.total_pages
                 this.setState({
-                films: data.results,
-                isLoading: false
-             })
-            )
+                    films: [ ...this.state.films, ...data.results ],
+                    isLoading: false
+                })
+            })
         }
     }
 
@@ -37,6 +40,17 @@ class Search extends React.Component {
         }
     }
 
+    _searchFilms() {
+        this.page = 0
+        this.totalPages = 0
+        this.setState({
+            films: [],
+        }, () => {
+            console.log("Page : " + this.page + " / TotalPages : " + this.totalPages + " / Nombre de films : " + this.state.films.length)
+            this._loadFilms()
+        })
+    }
+
     _searchTextInputChanged(text){
         this.searchedText = text
     }
@@ -45,11 +59,17 @@ class Search extends React.Component {
     console.log(this.state.isLoading);
     return (
       <View style={styles.main_container}>
-        <TextInput onSubmitEditing={() => this._loadFilms()} onChangeText={(text) => this._searchTextInputChanged(text)} style={styles.textinput} placeholder='Titre du film'/>
-        <Button style={{ height: 50 }} title='Rechercher' onPress={() => this._loadFilms()}/>
+        <TextInput onSubmitEditing={() => this._searchFilms()} onChangeText={(text) => this._searchTextInputChanged(text)} style={styles.textinput} placeholder='Titre du film'/>
+        <Button style={{ height: 50 }} title='Rechercher' onPress={() => this._searchFilms()}/>
         <FlatList
           data={this.state.films}
           keyExtractor={(item) => item.id.toString()}
+          onEndReachedThreshold={0.5}
+          onEndReached={() => {
+            if (this.state.films.length > 0 && this.page < this.totalPages){
+                this._loadFilms()
+            }
+          }}
           renderItem={({item}) => <FilmItem film={item}/>}
         />
         {this._displayLoading()}
