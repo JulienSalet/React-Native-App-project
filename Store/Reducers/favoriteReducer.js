@@ -1,22 +1,22 @@
-const initialState = { favoriteFilm: [] }
+const initialState = { favoritesFilm: [] }
 
 function toggleFavorite(state = initialState, action) {
-    let netState
-    switch(action.type) {
+    let nextState
+    switch (action.type) {
         case 'TOGGLE_FAVORITE':
-            const favoriteFilmIndex = state.favoriteFilm.findIndex(item => item.id === action.value.id)
+            const favoriteFilmIndex = state.favoritesFilm.findIndex(item => item.id === action.value.id)
             if (favoriteFilmIndex !== -1) {
-                //supression
+                // Le film est déjà dans les favoris, on le supprime de la liste
                 nextState = {
                     ...state,
-                    favoritesFilm: state.favoriteFilm.filter( (item, index) => index !== favoriteFilmIndex)
+                    favoritesFilm: state.favoritesFilm.filter( (item, index) => index !== favoriteFilmIndex)
                 }
             }
             else {
-                //ajouter
+                // Le film n'est pas dans les films favoris, on l'ajoute à la liste
                 nextState = {
                     ...state,
-                    favoritesFilm: [...state.favoriteFilm, action.value ]
+                    favoritesFilm: [...state.favoritesFilm, action.value]
                 }
             }
             return nextState || state
